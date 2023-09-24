@@ -16,26 +16,75 @@ const initialState = {
 export default class AppClass extends React.Component {
   // THE FOLLOWING HELPERS ARE JUST RECOMMENDATIONS.
   // You can delete them and build your own logic from scratch.
+  constructor() {
+    super();
+    this.state = initialState;
+  }
+  
 
-  getXY = () => {
-    // It it not necessary to have a state to track the coordinates.
-    // It's enough to know what index the "B" is at, to be able to calculate them.
+
+  getXY = (idx) => {
+    switch(idx) {
+      case 0:
+        return {x: 1, y: 1};
+      case 1:
+        return {x: 2, y: 1};
+      case 2:
+        return {x: 3, y: 1};
+      case 3:
+        return {x: 1, y: 2};
+      case 4:
+        return {x: 2, y: 2};
+      case 5:
+        return {x: 3, y: 2};
+      case 6:
+        return {x: 1, y: 3};
+      case 7:
+        return {x: 2, y: 3};
+      case 8:
+        return {x: 3, y: 3};   
+    }
   }
 
   getXYMessage = () => {
     // It it not necessary to have a state to track the "Coordinates (2, 2)" message for the user.
     // You can use the `getXY` helper above to obtain the coordinates, and then `getXYMessage`
     // returns the fully constructed string.
+    const coords = this.getXY(this.state.index);
+    return `Coordinates (${coords.x}, ${coords.y})`
   }
 
   reset = () => {
-    // Use this helper to reset all states to their initial values.
+    this.setState({
+      ...this.state,
+        index: initialIndex,
+        message: initialMessage,
+        steps: initialSteps
+    })
   }
 
   getNextIndex = (direction) => {
-    // This helper takes a direction ("left", "up", etc) and calculates what the next index
-    // of the "B" would be. If the move is impossible because we are at the edge of the grid,
-    // this helper should return the current index unchanged.
+    const newIndex =
+      direction === 'up'
+        ? this.state.index - 3
+        : direction === 'down'
+        ? this.state.index + 3
+        : direction === 'left'
+        ? this.state.index - 1
+        : direction === 'right'
+        ? this.state.index + 1
+        : this.state.index;
+  
+    if (newIndex >= 0 && newIndex <= 8) {
+      this.setState((prevState) => ({
+        ...prevState,
+        steps: prevState.steps + 1,
+        index: newIndex,
+        message: ''
+      }));
+    } else {
+      this.setState({ message: 'Invalid Move... ' });
+    }
   }
 
   move = (evt) => {
@@ -52,18 +101,19 @@ export default class AppClass extends React.Component {
   }
 
   render() {
+    console.log('render');
     const { className } = this.props
     return (
       <div id="wrapper" className={className}>
         <div className="info">
-          <h3 id="coordinates">Coordinates (2, 2)</h3>
-          <h3 id="steps">You moved 0 times</h3>
+          <h3 id="coordinates">{`Coordinates ${this.getXYMessage(this.state.index)}`}</h3>
+          <h3 id="steps">{`You moved ${this.state.steps} times`}</h3>
         </div>
         <div id="grid">
           {
             [0, 1, 2, 3, 4, 5, 6, 7, 8].map(idx => (
-              <div key={idx} className={`square${idx === 4 ? ' active' : ''}`}>
-                {idx === 4 ? 'B' : null}
+              <div key={idx} className={`square${idx === this.state.index ? ' active' : ''}`}>
+                {idx === this.state.index ? 'B' : null}
               </div>
             ))
           }
@@ -72,11 +122,11 @@ export default class AppClass extends React.Component {
           <h3 id="message"></h3>
         </div>
         <div id="keypad">
-          <button id="left">LEFT</button>
-          <button id="up">UP</button>
-          <button id="right">RIGHT</button>
-          <button id="down">DOWN</button>
-          <button id="reset">reset</button>
+          <button onClick={() => this.getNextIndex('left')} id="left">LEFT</button>
+          <button onClick={() => this.getNextIndex('up')} id="up">UP</button>
+          <button onClick={() => this.getNextIndex('right')} id="right">RIGHT</button>
+          <button onClick={() => this.getNextIndex('down')} id="down">DOWN</button>
+          <button onClick={() => this.reset()} id="reset">reset</button>
         </div>
         <form>
           <input id="email" type="email" placeholder="type email"></input>
