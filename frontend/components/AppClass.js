@@ -60,15 +60,17 @@ export default class AppClass extends React.Component {
       ...this.state,
         index: initialIndex,
         message: initialMessage,
-        steps: initialSteps
+        steps: initialSteps,
+        email: initialEmail
     })
   }
 
   getNextIndex = (direction) => {
     const { index } = this.state;
-    
-    // Define the maximum index value (assuming a 3x3 grid)
+  
+    // Define the maximum and minimum index values (assuming a 3x3 grid)
     const maxIndex = 8;
+    const minIndex = 0;
   
     let newIndex;
   
@@ -92,9 +94,8 @@ export default class AppClass extends React.Component {
       default:
         break;
     }
-  
-    // Check if newIndex is within bounds (between 0 and maxIndex)
-    if (newIndex >= 0 && newIndex <= maxIndex) {
+
+    if (newIndex >= minIndex && newIndex <= maxIndex) {
       this.setState((prevState) => ({
         ...prevState,
         steps: prevState.steps + 1,
@@ -102,7 +103,26 @@ export default class AppClass extends React.Component {
         message: '',
       }));
     } else {
-      this.setState({ message: 'Invalid Move...' });
+      let errorMessage = '';
+  
+      switch (direction) {
+        case 'up':
+          errorMessage = "You can't go up";
+          break;
+        case 'down':
+          errorMessage = "You can't go down";
+          break;
+        case 'left':
+          errorMessage = "You can't go left";
+          break;
+        case 'right':
+          errorMessage = "You can't go right";
+          break;
+        default:
+          errorMessage = '';
+      }
+  
+      this.setState({ message: errorMessage });
     }
   };
 
@@ -132,7 +152,8 @@ export default class AppClass extends React.Component {
     .then(res => {
       this.setState({
         ...this.state,
-          message: res.data.message
+          message: res.data.message,
+          email: ''
       })
     })
     .catch(err => {
@@ -150,7 +171,7 @@ export default class AppClass extends React.Component {
       <div id="wrapper" className={className}>
         <div className="info">
           <h3 id="coordinates">{`Coordinates ${this.getXYMessage(this.state.index)}`}</h3>
-          <h3 id="steps">{`You moved ${this.state.steps} times`}</h3>
+          <h3 id="steps">{`You moved ${this.state.steps} ${this.state.steps === 1 ? 'time' : 'times'}`}</h3>
         </div>
         <div id="grid">
           {
@@ -172,7 +193,7 @@ export default class AppClass extends React.Component {
           <button onClick={() => this.reset()} id="reset">reset</button>
         </div>
         <form onSubmit={this.onSubmit}> 
-          <input onChange={this.onChange} id="email" type="email" placeholder="type email"></input>
+          <input onChange={this.onChange} id="email" value={this.state.email} type="email" placeholder="type email"></input>
           <input id="submit" type="submit"></input>
         </form>
       </div>

@@ -7,19 +7,19 @@ const initialEmail = ''
 const initialSteps = 0
 const initialIndex = 4 // the index the "B" is at
 const _URL_ = `http://localhost:9000/api/result`
+const minIndex = 0;
+const maxIndex = 8;
 
 export default function AppFunctional(props) {
   const [index, setIndex] = useState(initialIndex);
   const [steps, setSteps] = useState(initialSteps);
   const [message, setMessage] = useState('');
-
-
-  let email = '';
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     // This effect will run when the index changes
     // Handle any side effects or validations related to index here
-  }, [index]);
+  }, [index, email]);
 
   function getXY(idx) {
     switch(idx) {
@@ -58,11 +58,12 @@ export default function AppFunctional(props) {
     // Use this helper to reset all states to their initial values.
     setIndex(initialIndex);
     setSteps(initialSteps)
+    setEmail(initialEmail)
+    setMessage(initialMessage)
   }
 
   const getNextIndex = (direction) => {
-    // Calculate the next index based on the direction
-    let newIndex = index;
+    let newIndex;
 
     switch (direction) {
       case 'up':
@@ -85,19 +86,37 @@ export default function AppFunctional(props) {
         break;
     }
 
-    // Check if the new index is within bounds (0 to 8)
-    if (newIndex >= 0 && newIndex <= 8) {
+    if (newIndex >= minIndex && newIndex <= maxIndex) {
       setSteps(steps + 1);
       setIndex(newIndex);
       setMessage('');
     } else {
-      setMessage("You can't go up");
+      let errorMessage = '';
+
+      switch (direction) {
+        case 'up':
+          errorMessage = "You can't go up";
+          break;
+        case 'down':
+          errorMessage = "You can't go down";
+          break;
+        case 'left':
+          errorMessage = "You can't go left";
+          break;
+        case 'right':
+          errorMessage = "You can't go right";
+          break;
+        default:
+          errorMessage = '';
+      }
+
+      setMessage(errorMessage);
     }
-  };
+  }
 
   function onChange(evt) {
     let { value } = evt.target
-    email = value
+    setEmail(value)
   }
 
   function onSubmit(evt) {
@@ -112,7 +131,8 @@ export default function AppFunctional(props) {
         email: email
       })
       .then(res => {
-        setMessage(res.data.message)
+        setMessage(res.data.message);
+        setEmail('')
       })
       .catch(err => setMessage(err.response.data.message))
   }
@@ -127,7 +147,7 @@ export default function AppFunctional(props) {
     <div id="wrapper" className={props.className}>
       <div className="info">
         <h3 id="coordinates">{getXYMessage(index)}</h3>
-        <h3 id="steps">{`You moved ${steps} times`}</h3>
+        <h3 id="steps">{`You moved ${steps} ${steps === 1 ? 'time' : 'times'}`}</h3>
       </div>
       <div id="grid">
         {
@@ -149,7 +169,7 @@ export default function AppFunctional(props) {
         <button onClick={() => reset()} id="reset">reset</button>
       </div>
       <form onSubmit={onSubmit}>
-        <input onChange={onChange} id="email" type="email" placeholder="type email"></input>
+        <input onChange={onChange} id="email" type="email" value={email} placeholder="type email"></input>
         <input id="submit" type="submit"></input>
       </form>
     </div>
