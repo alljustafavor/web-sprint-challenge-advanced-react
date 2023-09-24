@@ -1,10 +1,11 @@
 import React from 'react'
-
+import axios from 'axios'
 // Suggested initial states
 const initialMessage = ''
 const initialEmail = ''
 const initialSteps = 0
 const initialIndex = 4 // the index the "B" is at
+const _URL_ = `http://localhost:9000/api/result`
 
 const initialState = {
   message: initialMessage,
@@ -64,28 +65,46 @@ export default class AppClass extends React.Component {
   }
 
   getNextIndex = (direction) => {
-    const newIndex =
-      direction === 'up'
-        ? this.state.index - 3
-        : direction === 'down'
-        ? this.state.index + 3
-        : direction === 'left'
-        ? this.state.index - 1
-        : direction === 'right'
-        ? this.state.index + 1
-        : this.state.index;
+    const { index } = this.state;
+    
+    // Define the maximum index value (assuming a 3x3 grid)
+    const maxIndex = 8;
   
-    if (newIndex >= 0 && newIndex <= 8) {
+    let newIndex;
+  
+    switch (direction) {
+      case 'up':
+        newIndex = index - 3;
+        break;
+      case 'down':
+        newIndex = index + 3;
+        break;
+      case 'left':
+        if (index % 3 !== 0) {
+          newIndex = index - 1;
+        }
+        break;
+      case 'right':
+        if (index % 3 !== 2) {
+          newIndex = index + 1;
+        }
+        break;
+      default:
+        break;
+    }
+  
+    // Check if newIndex is within bounds (between 0 and maxIndex)
+    if (newIndex >= 0 && newIndex <= maxIndex) {
       this.setState((prevState) => ({
         ...prevState,
         steps: prevState.steps + 1,
         index: newIndex,
-        message: ''
+        message: '',
       }));
     } else {
-      this.setState({ message: 'Invalid Move... ' });
+      this.setState({ message: 'Invalid Move...' });
     }
-  }
+  };
 
   move = (evt) => {
     // This event handler can use the helper above to obtain a new index for the "B",
@@ -94,10 +113,34 @@ export default class AppClass extends React.Component {
 
   onChange = (evt) => {
     // You will need this to update the value of the input.
+    let { value } = evt.target
+    this.setState({
+      ...this.state,
+        email: value
+    })
   }
 
   onSubmit = (evt) => {
     // Use a POST request to send a payload to the server.
+    evt.preventDefault()
+    const coords = this.getXY(this.state.index);
+    axios.post(_URL_,{
+      ...this.state,
+        x: coords.x,
+        y: coords.y
+    })
+    .then(res => {
+      this.setState({
+        ...this.state,
+          message: res.data.message
+      })
+    })
+    .catch(err => {
+      this.setState({
+        ...this.state,
+          message: err.response.data.message
+      })
+    })
   }
 
   render() {
@@ -119,7 +162,7 @@ export default class AppClass extends React.Component {
           }
         </div>
         <div className="info">
-          <h3 id="message"></h3>
+          <h3 id="message">{this.state.message}</h3>
         </div>
         <div id="keypad">
           <button onClick={() => this.getNextIndex('left')} id="left">LEFT</button>
@@ -128,8 +171,8 @@ export default class AppClass extends React.Component {
           <button onClick={() => this.getNextIndex('down')} id="down">DOWN</button>
           <button onClick={() => this.reset()} id="reset">reset</button>
         </div>
-        <form>
-          <input id="email" type="email" placeholder="type email"></input>
+        <form onSubmit={this.onSubmit}> 
+          <input onChange={this.onChange} id="email" type="email" placeholder="type email"></input>
           <input id="submit" type="submit"></input>
         </form>
       </div>

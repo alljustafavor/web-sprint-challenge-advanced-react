@@ -60,28 +60,40 @@ export default function AppFunctional(props) {
     setSteps(initialSteps)
   }
 
-  function getNextIndex(direction) {
+  const getNextIndex = (direction) => {
     // Calculate the next index based on the direction
-    const newIndex =
-      direction === 'up'
-        ? index - 3
-        : direction === 'down'
-        ? index + 3
-        : direction === 'left'
-        ? index - 1
-        : direction === 'right'
-        ? index + 1
-        : index;
+    let newIndex = index;
+
+    switch (direction) {
+      case 'up':
+        newIndex = index - 3;
+        break;
+      case 'down':
+        newIndex = index + 3;
+        break;
+      case 'left':
+        if (index % 3 !== 0) {
+          newIndex = index - 1;
+        }
+        break;
+      case 'right':
+        if (index % 3 !== 2) {
+          newIndex = index + 1;
+        }
+        break;
+      default:
+        break;
+    }
 
     // Check if the new index is within bounds (0 to 8)
     if (newIndex >= 0 && newIndex <= 8) {
-      setSteps(steps + 1)
+      setSteps(steps + 1);
       setIndex(newIndex);
       setMessage('');
     } else {
-      setMessage('Invalid move');
+      setMessage("You can't go up");
     }
-  }
+  };
 
   function onChange(evt) {
     let { value } = evt.target
