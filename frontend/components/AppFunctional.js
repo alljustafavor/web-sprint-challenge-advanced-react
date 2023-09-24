@@ -1,14 +1,20 @@
 import React,{ useState, useEffect } from 'react'
+import axios from 'axios'
 
 // Suggested initial states
 const initialMessage = ''
 const initialEmail = ''
 const initialSteps = 0
 const initialIndex = 4 // the index the "B" is at
+const _URL_ = `http://localhost:9000/api/result`
 
 export default function AppFunctional(props) {
   const [index, setIndex] = useState(initialIndex);
-  const [error, setError] = useState('');
+  const [steps, setSteps] = useState(initialSteps);
+  const [message, setMessage] = useState('');
+
+
+  let email = '';
 
   useEffect(() => {
     // This effect will run when the index changes
@@ -18,23 +24,23 @@ export default function AppFunctional(props) {
   function getXY(idx) {
     switch(idx) {
       case 0:
-        return "(1,1)";
+        return {x: 1, y: 1};
       case 1:
-        return "(2,1)";
+        return {x: 2, y: 1};
       case 2:
-        return "(3,1)";
+        return {x: 3, y: 1};
       case 3:
-        return "(1,2)";
+        return {x: 1, y: 2};
       case 4:
-        return "(2,2)";
+        return {x: 2, y: 2};
       case 5:
-        return "(3,2)";
+        return {x: 3, y: 2};
       case 6:
-        return "(1,3)";
+        return {x: 1, y: 3};
       case 7:
-        return "(2,3)";
+        return {x: 2, y: 3};
       case 8:
-        return "(3,3)";   
+        return {x: 3, y: 3};   
     }
   }
 
@@ -43,13 +49,15 @@ export default function AppFunctional(props) {
     // It it not necessary to have a state to track the "Coordinates (2, 2)" message for the user.
     // You can use the `getXY` helper above to obtain the coordinates, and then `getXYMessage`
     // returns the fully constructed string.
-    const getCoords = getXY(index);
-    return `Coordinates ${getCoords}`
+    const coords = getXY(index);
+    return `Coordinates (${coords.x}, ${coords.y})`
 
   }
 
   function reset() {
     // Use this helper to reset all states to their initial values.
+    setIndex(initialIndex);
+    setSteps(initialSteps)
   }
 
   function getNextIndex(direction) {
@@ -67,22 +75,34 @@ export default function AppFunctional(props) {
 
     // Check if the new index is within bounds (0 to 8)
     if (newIndex >= 0 && newIndex <= 8) {
+      setSteps(steps + 1)
       setIndex(newIndex);
-      setError('');
+      setMessage('');
     } else {
-      setError('Invalid move');
+      setMessage('Invalid move');
     }
-  }
-  function move(evt) {
-    
   }
 
   function onChange(evt) {
-    
+    let { value } = evt.target
+    email = value
   }
 
   function onSubmit(evt) {
     // Use a POST request to send a payload to the server.
+    const coords = getXY(index);
+    evt.preventDefault()
+    axios.post(_URL_,
+      {
+        steps: steps,
+        x: coords.x,
+        y: coords.y,
+        email: email
+      })
+      .then(res => {
+        setMessage(res.data.message)
+      })
+      .catch(err => setMessage(err.response.data.message))
   }
 
 
@@ -95,7 +115,7 @@ export default function AppFunctional(props) {
     <div id="wrapper" className={props.className}>
       <div className="info">
         <h3 id="coordinates">{getXYMessage(index)}</h3>
-        <h3 id="steps">You moved 0 times</h3>
+        <h3 id="steps">{`You moved ${steps} times`}</h3>
       </div>
       <div id="grid">
         {
@@ -107,7 +127,7 @@ export default function AppFunctional(props) {
         }
       </div>
       <div className="info">
-        <h3 id="message"></h3>
+        <h3 id="message">{message}</h3>
       </div>
       <div id="keypad">
         <button onClick={() => getNextIndex('left')} id="left">LEFT</button>
@@ -116,8 +136,8 @@ export default function AppFunctional(props) {
         <button onClick={() => getNextIndex('down')} id="down">DOWN</button>
         <button onClick={() => reset()} id="reset">reset</button>
       </div>
-      <form>
-        <input id="email" type="email" placeholder="type email"></input>
+      <form onSubmit={onSubmit}>
+        <input onChange={onChange} id="email" type="email" placeholder="type email"></input>
         <input id="submit" type="submit"></input>
       </form>
     </div>
